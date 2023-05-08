@@ -8,25 +8,26 @@ set MYSQL_PASSWORD=password
 set BACKUP_PATH=C:\mysql_backup
 set MYSQL_BIN_PATH=C:\mysql\bin
 
-set "bb=%MYSQL_BIN_PATH%\mysql"
-set "date=%date:~0,4%%date:~5,2%%date:~8,2%"
+set "bin_path=%MYSQL_BIN_PATH%\mysql"
+set "dump=%MYSQL_BIN_PATH%\mysqldump"
+set "date=%date:~0,4%-%date:~5,2%-%date:~8,2%"
 
 if not exist "%BACKUP_PATH%/%date%/%Host%" md "%BACKUP_PATH%/%date%/%Host%"
-set "aa=%BACKUP_PATH%/%date%/%Host%"
+set "dir_path=%BACKUP_PATH%/%date%/%Host%"
 
-for /f "usebackq" %%d in (`%bb% -u%MYSQL_USER% -p%MYSQL_PASSWORD% -e "show databases;"`) do (
+for /f "usebackq" %%d in (`%bin_path% -u%MYSQL_USER% -p%MYSQL_PASSWORD% -e "show databases;"`) do (
   if not "%%d"=="information_schema" (
     if not "%%d"=="performance_schema" (
       if not "%%d"=="mysql" (
         echo Backing up database %%d...
-        "D:\xampp\mysql\bin\mysqldump" --user=%MYSQL_USER% --password=%MYSQL_PASSWORD% --host=%Host% --port=%port% --databases %%d > "%aa%\%%d.sql"
+        %dump% --user=%MYSQL_USER% --password=%MYSQL_PASSWORD% --host=%Host% --port=%port% --databases %%d > "%dir_path%\%%d.sql"
       )
     )
   )
 )
 
-powershell Compress-Archive -Path "%aa%/*.sql" -DestinationPath "%BACKUP_PATH%/%Host%.zip"
-rmdir /s /q "%BACKUP_PATH%/%date%"
+powershell Compress-Archive -Path "%dir_path%/*.sql" -DestinationPath "%BACKUP_PATH%/%date%/%Host%.zip"
+rmdir /s /q "%BACKUP_PATH%/%date%/%Host%"
 
 echo:
 echo All databases backed up successfully!
